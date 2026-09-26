@@ -45,14 +45,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <TouchableOpacity
           onLongPress={() => setShowReactionPicker(true)}
           activeOpacity={0.9}
-          className={`p-3 rounded-2xl ${
+          className={`p-3 ${
             isMyMessage
-              ? "bg-primary rounded-br-none"
-              : "bg-surfaceLight rounded-bl-none"
+              ? "bg-blue-600 rounded-2xl rounded-tr-sm"
+              : "bg-zinc-800 rounded-2xl rounded-tl-sm"
           }`}
         >
           {!isMyMessage && message.senderName && (
-            <Text className="text-xs font-semibold text-primary mb-1">
+            <Text className="text-xs font-semibold text-blue-400 mb-1">
               {message.senderName}
             </Text>
           )}

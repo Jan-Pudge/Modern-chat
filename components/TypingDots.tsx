@@ -44,12 +44,12 @@ export function TypingDots({ typingUsers }: Props) {
       : `${typingUsers.join(", ")} друкують`;
 
   return (
-    <View className="flex-row items-center px-4 py-1.5 bg-background">
-      <Text className="text-textMuted text-xs mr-2">{text}</Text>
+    <View className="flex-row items-center px-4 py-1.5 bg-zinc-950">
+      <Text className="text-zinc-400 text-xs mr-2">{text}</Text>
       <View className="flex-row items-center gap-1">
-        <Animated.View className="w-1.5 h-1.5 rounded-full bg-primary" style={{ transform: [{ translateY: dot1 }] }} />
-        <Animated.View className="w-1.5 h-1.5 rounded-full bg-primary" style={{ transform: [{ translateY: dot2 }] }} />
-        <Animated.View className="w-1.5 h-1.5 rounded-full bg-primary" style={{ transform: [{ translateY: dot3 }] }} />
+        <Animated.View className="w-1.5 h-1.5 rounded-full bg-blue-500" style={{ transform: [{ translateY: dot1 }] }} />
+        <Animated.View className="w-1.5 h-1.5 rounded-full bg-blue-500" style={{ transform: [{ translateY: dot2 }] }} />
+        <Animated.View className="w-1.5 h-1.5 rounded-full bg-blue-500" style={{ transform: [{ translateY: dot3 }] }} />
       </View>
     </View>
   );

@@ -324,19 +324,52 @@ export default function ChatRoomScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-surface"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1 bg-zinc-950"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <Stack.Screen
         options={{
-          title: room?.title ?? "Чат",
+          headerStyle: { backgroundColor: "#09090b" },
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="mr-2 p-1 -ml-2"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          ),
+          headerTitle: () => (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push(`/settings/${chatRoomId}`)}
+              className="flex-row items-center flex-1 max-w-[240px]"
+            >
+              <View className="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-500/30 items-center justify-center mr-2.5">
+                <Text className="text-blue-400 font-bold text-sm">
+                  {room?.title ? room.title[0]?.toUpperCase() : "C"}
+                </Text>
+              </View>
+              <View className="flex-1 justify-center">
+                <Text className="text-white font-semibold text-base" numberOfLines={1}>
+                  {room?.title ?? "Чат"}
+                </Text>
+                <Text className="text-zinc-400 text-xs" numberOfLines={1}>
+                  {typingUsers && typingUsers.length > 0
+                    ? `${typingUsers.join(", ")} друкує...`
+                    : "в мережі"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push(`/settings/${chatRoomId}`)}
               className="p-1"
             >
-              <Ionicons name="information-circle-outline" size={24} color={COLORS.primary} />
+              <Ionicons name="information-circle-outline" size={24} color="#60A5FA" />
             </TouchableOpacity>
           ),
         }}
@@ -348,19 +381,23 @@ export default function ChatRoomScreen() {
         inverted={true}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 16 }}
+        className="flex-1 bg-zinc-950"
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.3}
         ListFooterComponent={
           status === "LoadingMore" ? (
             <View className="py-4 items-center w-full">
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color="#3B82F6" />
             </View>
           ) : null
         }
         ListEmptyComponent={
           !isLoading ? (
             <View className="py-12 items-center justify-center">
-              <Text className="text-white/50 text-sm text-center">
+              <View className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center mb-3">
+                <Ionicons name="chatbubbles-outline" size={28} color="#71717A" />
+              </View>
+              <Text className="text-zinc-400 text-sm text-center font-medium">
                 У цій кімнаті ще немає повідомлень.{"\n"}Напишіть першим!
               </Text>
             </View>
@@ -389,9 +426,9 @@ export default function ChatRoomScreen() {
       )}
 
       {editingMessageId && (
-        <View className="flex-row items-center justify-between px-4 py-2 bg-surfaceLight border-t border-surface">
+        <View className="flex-row items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 border-l-2 border-l-amber-500">
           <View className="flex-row items-center flex-1 mr-2">
-            <Ionicons name="pencil" size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <Ionicons name="pencil" size={16} color="#F59E0B" style={{ marginRight: 6 }} />
             <Text className="text-white text-xs font-semibold">Редагування повідомлення</Text>
           </View>
           <TouchableOpacity
@@ -400,17 +437,17 @@ export default function ChatRoomScreen() {
               setInputText("");
             }}
           >
-            <Ionicons name="close-circle" size={20} color={COLORS.textMuted} />
+            <Ionicons name="close" size={20} color="#71717A" />
           </TouchableOpacity>
         </View>
       )}
 
       {selectedImageUri && (
-        <View className="flex-row items-center px-4 py-2 bg-surfaceLight border-t border-surface">
-          <Image source={{ uri: selectedImageUri }} className="w-12 h-12 rounded-lg mr-3" />
+        <View className="flex-row items-center px-4 py-2 bg-zinc-900 border-t border-zinc-800">
+          <Image source={{ uri: selectedImageUri }} className="w-12 h-12 rounded-xl mr-3 border border-zinc-700" />
           <Text className="text-white text-xs flex-1">Фото прикріплено</Text>
           <TouchableOpacity onPress={() => setSelectedImageUri(null)}>
-            <Ionicons name="close-circle" size={22} color={COLORS.danger} />
+            <Ionicons name="close-circle" size={22} color="#EF4444" />
           </TouchableOpacity>
         </View>
       )}
@@ -418,21 +455,24 @@ export default function ChatRoomScreen() {
       {recorderState.isRecording ? (
         <View
           style={{ paddingBottom: Math.max(insets.bottom, 10) }}
-          className="flex-row items-center justify-between px-4 pt-3 bg-surface border-t border-surfaceLight"
+          className="flex-row items-center justify-between px-4 py-2.5 bg-zinc-950 border-t border-zinc-800"
         >
           <View className="flex-row items-center gap-3">
             <View className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <Text className="text-white font-medium">Запис: {recordingSeconds} с</Text>
+            <Text className="text-white font-medium text-sm">Запис: {recordingSeconds} с</Text>
           </View>
 
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={cancelRecording} className="p-2 active:opacity-70">
-              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+            <TouchableOpacity
+              onPress={cancelRecording}
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-70"
+            >
+              <Ionicons name="trash-outline" size={20} color="#EF4444" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={stopAndSendRecording}
-              className="w-11 h-11 rounded-full bg-primary items-center justify-center active:opacity-80"
+              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80"
             >
               <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
             </TouchableOpacity>
@@ -441,18 +481,19 @@ export default function ChatRoomScreen() {
       ) : (
         <View
           style={{ paddingBottom: Math.max(insets.bottom, 10) }}
-          className="flex-row items-center px-3 pt-2 bg-surface border-t border-surfaceLight"
+          className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
         >
           <TouchableOpacity
             onPress={pickImage}
             disabled={isSubmitting}
-            className="mr-2 p-2 rounded-full bg-surfaceLight"
+            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 mr-2 active:opacity-70"
           >
-            <Ionicons name="image-outline" size={22} color={COLORS.primary} />
+            <Ionicons name="attach" size={22} color="#A1A1AA" />
           </TouchableOpacity>
 
           <TextInput
-            className="flex-1 bg-background text-white px-4 py-2.5 rounded-full text-base border border-surfaceLight mr-2"
+            className="flex-1 text-white py-2.5 px-4 mr-2 bg-zinc-900 rounded-full text-sm border border-zinc-800"
+            style={{ maxHeight: 120 }}
             placeholder={
               editingMessageId
                 ? "Змініть текст..."
@@ -462,7 +503,7 @@ export default function ChatRoomScreen() {
                 ? "Додайте підпис до фото..."
                 : "Напишіть повідомлення..."
             }
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor="#71717A"
             value={inputText}
             onChangeText={handleTextChange}
             multiline
@@ -472,13 +513,13 @@ export default function ChatRoomScreen() {
             <TouchableOpacity
               onPress={handleSend}
               disabled={isSubmitting}
-              className="w-11 h-11 rounded-full items-center justify-center bg-primary active:opacity-80"
+              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80 shadow-sm"
             >
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Ionicons
-                  name={editingMessageId ? "checkmark" : "send"}
+                  name={editingMessageId ? "checkmark" : "arrow-up"}
                   size={20}
                   color="#FFFFFF"
                 />
@@ -489,17 +530,17 @@ export default function ChatRoomScreen() {
               <TouchableOpacity
                 onPress={() => setIsVideoRecorderVisible(true)}
                 disabled={isSubmitting}
-                className="w-11 h-11 rounded-full bg-surfaceLight items-center justify-center active:opacity-80"
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
               >
-                <Ionicons name="videocam-outline" size={22} color={COLORS.primary} />
+                <Ionicons name="videocam-outline" size={20} color="#A1A1AA" />
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={startRecording}
                 disabled={isSubmitting}
-                className="w-11 h-11 rounded-full bg-surfaceLight items-center justify-center active:opacity-80"
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
               >
-                <Ionicons name="mic" size={22} color={COLORS.primary} />
+                <Ionicons name="mic-outline" size={20} color="#A1A1AA" />
               </TouchableOpacity>
             </View>
           )}

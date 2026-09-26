@@ -107,9 +107,9 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
     <View className="relative justify-center my-1">
       <Animated.View
         style={animatedIconStyle}
-        className="absolute left-2 z-0 items-center justify-center w-8 h-8 rounded-full bg-primary/30"
+        className="absolute left-2 z-0 items-center justify-center w-8 h-8 rounded-full bg-blue-600/30"
       >
-        <Ionicons name="arrow-undo" size={18} color={COLORS.primary} />
+        <Ionicons name="arrow-undo" size={18} color="#3B82F6" />
       </Animated.View>
 
       <GestureDetector gesture={panGesture}>
@@ -122,12 +122,12 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
               activeOpacity={0.9}
               onLongPress={() => setShowReactionPicker(true)}
               delayLongPress={200}
-              className={`w-full rounded-2xl ${
+              className={`w-full ${
                 item.videoUrl && item.isVideoNote
-                  ? "bg-surface/50 p-2"
+                  ? "bg-zinc-900/60 p-2 rounded-2xl"
                   : isOwn
-                  ? "bg-primary rounded-br-xs p-3"
-                  : "bg-secondary rounded-bl-xs p-3"
+                  ? "bg-blue-600 rounded-2xl rounded-tr-sm p-3"
+                  : "bg-zinc-800 rounded-2xl rounded-tl-sm p-3"
               }`}
             >
               {!isOwn && (
@@ -137,16 +137,31 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
                   className="mb-1 self-start"
                   hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 >
-                  <Text className="text-primary font-bold text-xs">{item.senderName}</Text>
+                  <Text className="text-blue-400 font-semibold text-xs">{item.senderName}</Text>
                 </TouchableOpacity>
               )}
 
               {item.replyToSender && (
-                <View className="mb-2 p-2 rounded-lg bg-surface/50 border-l-2 border-primary">
-                  <Text className="text-primary font-semibold text-[11px]">
+                <View
+                  className={`mb-2 p-2 rounded-lg border-l-2 ${
+                    isOwn
+                      ? "bg-blue-700/60 border-white/80"
+                      : "bg-zinc-900/70 border-blue-500"
+                  }`}
+                >
+                  <Text
+                    className={`font-semibold text-[11px] ${
+                      isOwn ? "text-white" : "text-blue-400"
+                    }`}
+                  >
                     {item.replyToSender}
                   </Text>
-                  <Text className="text-white/70 text-xs mt-0.5" numberOfLines={2}>
+                  <Text
+                    className={`text-xs mt-0.5 ${
+                      isOwn ? "text-blue-100" : "text-zinc-300"
+                    }`}
+                    numberOfLines={2}
+                  >
                     {item.replyToText || "📷 Фотографія"}
                   </Text>
                 </View>
@@ -171,7 +186,7 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
                 >
                   <Image
                     source={{ uri: item.imageUrl }}
-                    className="w-56 h-56 rounded-xl mb-1.5 bg-surface"
+                    className="w-56 h-56 rounded-xl mb-1.5 bg-zinc-900"
                     resizeMode="cover"
                   />
                 </TouchableOpacity>
@@ -193,14 +208,32 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
 
               <View className="flex-row items-center justify-end mt-1 gap-1">
                 {item.isEdited && (
-                  <Text className="text-white/60 text-[10px] italic">(ред.)</Text>
+                  <Text
+                    className={`text-[10px] italic ${
+                      isOwn ? "text-blue-200" : "text-zinc-400"
+                    }`}
+                  >
+                    (ред.)
+                  </Text>
                 )}
-                <Text className="text-white/60 text-[10px]">
+                <Text
+                  className={`text-[11px] ${
+                    isOwn ? "text-blue-200" : "text-zinc-400"
+                  }`}
+                >
                   {new Date(item._creationTime).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </Text>
+                {isOwn && (
+                  <Ionicons
+                    name="checkmark-done"
+                    size={14}
+                    color="#93C5FD"
+                    style={{ marginLeft: 2 }}
+                  />
+                )}
               </View>
             </TouchableOpacity>
 

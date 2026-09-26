@@ -40,13 +40,13 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
       <TouchableOpacity
         onPress={togglePlayPause}
         className={`w-10 h-10 rounded-full items-center justify-center active:opacity-80 ${
-          isMyMessage ? "bg-white" : "bg-primary"
+          isMyMessage ? "bg-white" : "bg-blue-600"
         }`}
       >
         <Ionicons
           name={status.playing ? "pause" : "play"}
           size={20}
-          color={isMyMessage ? COLORS.primary : "#FFFFFF"}
+          color={isMyMessage ? "#2563EB" : "#FFFFFF"}
           style={{ marginLeft: status.playing ? 0 : 2 }}
         />
       </TouchableOpacity>
@@ -54,12 +54,12 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
       <View className="flex-1 justify-center">
         <View
           className={`h-1.5 rounded-full overflow-hidden mb-1.5 ${
-            isMyMessage ? "bg-white/30" : "bg-surfaceLight"
+            isMyMessage ? "bg-white/30" : "bg-zinc-700"
           }`}
         >
           <View
             className={`h-full rounded-full ${
-              isMyMessage ? "bg-white" : "bg-primary"
+              isMyMessage ? "bg-white" : "bg-blue-500"
             }`}
             style={{ width: `${Math.min(progress * 100, 100)}%` }}
           />
@@ -68,14 +68,14 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
         <View className="flex-row justify-between items-center">
           <Text
             className={`text-xs ${
-              isMyMessage ? "text-white/80" : "text-grey"
+              isMyMessage ? "text-blue-100" : "text-zinc-400"
             }`}
           >
             {formatTime(status.currentTime || 0)}
           </Text>
           <Text
             className={`text-xs ${
-              isMyMessage ? "text-white/80" : "text-grey"
+              isMyMessage ? "text-blue-100" : "text-zinc-400"
             }`}
           >
             {formatTime(effectiveDuration)}
@@ -86,7 +86,7 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({
       <Ionicons
         name="mic"
         size={16}
-        color={isMyMessage ? "rgba(255,255,255,0.7)" : COLORS.primary}
+        color={isMyMessage ? "rgba(255,255,255,0.7)" : "#A1A1AA"}
       />
     </View>
   );

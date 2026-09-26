@@ -48,7 +48,7 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="bg-surface border border-surfaceLight rounded-3xl p-3 shadow-2xl w-full max-w-[320px]"
+          className="bg-zinc-900 border border-zinc-800 rounded-3xl p-3 shadow-2xl w-full max-w-[320px]"
         >
           {/* Рядок вибору емодзі */}
           <View className="flex-row items-center justify-between px-1">
@@ -59,7 +59,7 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
                   onSelectEmoji(emoji);
                   onClose();
                 }}
-                className="w-10 h-10 rounded-2xl bg-surfaceLight/80 items-center justify-center active:scale-125"
+                className="w-10 h-10 rounded-2xl bg-zinc-800/80 items-center justify-center active:scale-125"
                 activeOpacity={0.7}
               >
                 <Text className="text-2xl">{emoji}</Text>
@@ -68,16 +68,16 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
           </View>
 
           {/* Розділювач */}
-          <View className="h-[1px] bg-surfaceLight/70 my-2.5 w-full" />
+          <View className="h-[1px] bg-zinc-800 my-2.5 w-full" />
 
           {/* Меню дій над повідомленням */}
           <View className="flex-col gap-1">
             <TouchableOpacity
               onPress={() => handleAction(onReply)}
               activeOpacity={0.7}
-              className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-surfaceLight/60"
+              className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-zinc-800"
             >
-              <Ionicons name="arrow-undo-outline" size={20} color={COLORS.primary} />
+              <Ionicons name="arrow-undo-outline" size={20} color="#3B82F6" />
               <Text className="text-white text-sm font-medium">Відповісти</Text>
             </TouchableOpacity>
 
@@ -85,7 +85,7 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
               <TouchableOpacity
                 onPress={() => handleAction(onEdit)}
                 activeOpacity={0.7}
-                className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-surfaceLight/60"
+                className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-zinc-800"
               >
                 <Ionicons name="pencil-outline" size={20} color="#38BDF8" />
                 <Text className="text-white text-sm font-medium">Редагувати</Text>
@@ -96,7 +96,7 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
               <TouchableOpacity
                 onPress={() => handleAction(onDelete)}
                 activeOpacity={0.7}
-                className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-surfaceLight/60"
+                className="flex-row items-center gap-3 py-2 px-3 rounded-xl active:bg-zinc-800"
               >
                 <Ionicons name="trash-outline" size={20} color="#EF4444" />
                 <Text className="text-red-400 text-sm font-medium">Видалити</Text>

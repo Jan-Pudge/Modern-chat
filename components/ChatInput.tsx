@@ -178,71 +178,101 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   );
 
   return (
-    <View className="bg-surface border-t border-surfaceLight p-3">
+    <View className="bg-zinc-950">
+      {replyTo && (
+        <View className="flex-row items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 border-l-2 border-l-blue-500">
+          <View className="flex-row items-center flex-1 mr-2">
+            <Ionicons
+              name="arrow-undo"
+              size={18}
+              color="#3B82F6"
+              style={{ marginRight: 8 }}
+            />
+            <View className="flex-1">
+              <Text className="text-blue-400 font-semibold text-xs">
+                Відповідь для {replyTo.sender}
+              </Text>
+              <Text className="text-zinc-300 text-xs mt-0.5" numberOfLines={1}>
+                {replyTo.text || "📷 Зображення"}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={onCancelReply}
+            className="w-7 h-7 rounded-full bg-zinc-800 items-center justify-center active:opacity-70"
+            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          >
+            <Ionicons name="close" size={16} color="#A1A1AA" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {recorderState.isRecording ? (
-        <View className="flex-row items-center justify-between bg-surfaceLight/60 px-4 py-2.5 rounded-2xl">
+        <View className="flex-row items-center justify-between px-4 py-2.5 border-t border-zinc-800 bg-zinc-950">
           <View className="flex-row items-center gap-3">
             <View className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <Text className="text-white font-medium">
+            <Text className="text-white font-medium text-sm">
               Запис: {recordingSeconds} с
             </Text>
           </View>
 
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-2">
             <TouchableOpacity
               onPress={cancelRecording}
-              className="p-2 active:opacity-70"
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-70"
             >
-              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              <Ionicons name="trash-outline" size={20} color="#EF4444" />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={stopAndSendRecording}
-              className="w-10 h-10 rounded-full bg-primary items-center justify-center active:opacity-80"
+              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80 shadow-sm"
             >
-              <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
+              <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950">
           <TextInput
             value={text}
             onChangeText={setText}
             placeholder="Напишіть повідомлення..."
-            placeholderTextColor="#666"
-            className="flex-1 bg-surfaceLight text-white px-4 py-3 rounded-2xl text-base max-h-24"
+            placeholderTextColor="#71717A"
+            className="flex-1 text-white py-2.5 px-4 mr-2 bg-zinc-900 rounded-full text-sm border border-zinc-800"
             multiline
+            style={{ maxHeight: 120 }}
           />
 
           {text.trim().length > 0 ? (
             <TouchableOpacity
               onPress={handleSendText}
               disabled={isSending}
-              className="w-11 h-11 rounded-full bg-primary items-center justify-center active:opacity-80"
+              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80 shadow-sm"
             >
               {isSending ? (
-                <ActivityIndicator size="small" color="#FFF" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Ionicons name="arrow-up" size={22} color="#FFF" />
+                <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
               )}
             </TouchableOpacity>
           ) : (
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-1.5 flex-shrink-0">
               <TouchableOpacity
                 onPress={() => setIsVideoRecorderVisible(true)}
                 disabled={isSending}
-                className="w-11 h-11 rounded-full bg-surfaceLight items-center justify-center active:opacity-80"
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
               >
-                <Ionicons name="videocam-outline" size={22} color={COLORS.primary} />
+                <Ionicons name="videocam-outline" size={20} color="#A1A1AA" />
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={startRecording}
                 disabled={isSending}
-                className="w-11 h-11 rounded-full bg-surfaceLight items-center justify-center active:opacity-80"
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
               >
-                <Ionicons name="mic" size={22} color={COLORS.primary} />
+                <Ionicons name="mic-outline" size={20} color="#A1A1AA" />
               </TouchableOpacity>
             </View>
           )}

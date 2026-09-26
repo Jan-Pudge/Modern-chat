@@ -76,8 +76,8 @@ export const SwipeableRoomItem: React.FC<SwipeableRoomItemProps> = ({
   });
 
   return (
-    <View className="relative overflow-hidden rounded-2xl mb-3">
-      <View className="absolute inset-0 bg-red-600 rounded-2xl flex-row justify-end items-center pr-5">
+    <View className="relative overflow-hidden border-b border-zinc-900 bg-zinc-950">
+      <View className="absolute inset-0 bg-red-600 flex-row justify-end items-center pr-5">
         <TouchableOpacity
           onPress={handleDeletePress}
           activeOpacity={0.8}
@@ -102,48 +102,50 @@ export const SwipeableRoomItem: React.FC<SwipeableRoomItemProps> = ({
                 onPress();
               }
             }}
-            activeOpacity={0.9}
-            className="bg-secondary border border-surfaceLight rounded-2xl p-4 flex-row items-center justify-between"
+            activeOpacity={0.7}
+            className="bg-zinc-950 active:bg-zinc-900/60 px-4 py-3 flex-row items-center justify-between"
           >
             <View className="flex-row items-center flex-1 mr-3">
-              <View className="w-12 h-12 rounded-xl bg-surfaceLight items-center justify-center mr-3.5">
-                <Ionicons name="chatbubbles" size={22} color={COLORS.primary} />
+              <View className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/30 items-center justify-center mr-3.5 flex-shrink-0">
+                <Text className="text-blue-400 font-bold text-base">
+                  {room.title ? room.title[0]?.toUpperCase() : "C"}
+                </Text>
               </View>
 
               <View className="flex-1">
                 <View className="flex-row items-center gap-1.5">
-                  <Text className="text-white text-base font-bold flex-shrink" numberOfLines={1}>
+                  <Text className="text-white text-base font-semibold flex-shrink" numberOfLines={1}>
                     {room.title}
                   </Text>
                   {isCreator && (
-                    <View className="bg-primary/20 px-1.5 py-0.5 rounded">
-                      <Text className="text-primary text-[10px] font-semibold">автор</Text>
+                    <View className="bg-blue-950/80 border border-blue-500/30 px-1.5 py-0.5 rounded-full">
+                      <Text className="text-blue-400 text-[10px] font-semibold">автор</Text>
                     </View>
                   )}
                 </View>
 
                 {room.lastMessage ? (
-                  <Text className="text-textMuted text-xs mt-1" numberOfLines={1}>
+                  <Text className="text-zinc-400 text-sm mt-0.5" numberOfLines={1}>
                     {room.lastMessage}
                   </Text>
                 ) : (
-                  <Text className="text-textMuted/60 text-xs italic mt-1" numberOfLines={1}>
+                  <Text className="text-zinc-500 text-sm italic mt-0.5" numberOfLines={1}>
                     {room.description || "Повідомлень ще немає"}
                   </Text>
                 )}
               </View>
             </View>
 
-            <View className="items-end">
+            <View className="items-end justify-center">
               {room.lastMessageAt ? (
-                <Text className="text-textMuted text-[10px] mb-1">
+                <Text className="text-zinc-500 text-xs mb-1">
                   {new Date(room.lastMessageAt).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </Text>
               ) : null}
-              <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
+              <Ionicons name="chevron-forward" size={16} color="#71717A" />
             </View>
           </TouchableOpacity>
         </Animated.View>

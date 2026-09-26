@@ -65,23 +65,26 @@ export default function HomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-zinc-950">
       <Stack.Screen
         options={{
           title: "Чат-кімнати",
+          headerStyle: { backgroundColor: "#09090b" },
+          headerShadowVisible: false,
+          headerTitleStyle: { color: "#FFFFFF", fontWeight: "600" },
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.push("/profile")}
-              className="mr-3 w-9 h-9 rounded-full bg-secondary border border-surfaceLight items-center justify-center"
+              className="mr-3 w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center"
               activeOpacity={0.8}
             >
-              <Ionicons name="person" size={18} color={COLORS.primary} />
+              <Ionicons name="person" size={18} color="#60A5FA" />
             </TouchableOpacity>
           ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => router.push("/new-room")}
-              className="w-9 h-9 rounded-full bg-primary items-center justify-center shadow-sm"
+              className="w-9 h-9 rounded-full bg-blue-600 items-center justify-center shadow-sm"
               activeOpacity={0.8}
             >
               <Ionicons name="add" size={22} color="#FFFFFF" />
@@ -92,16 +95,16 @@ export default function HomeScreen() {
 
       {rooms === undefined ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text className="text-textMuted text-xs mt-3">Завантаження кімнат...</Text>
+          <ActivityIndicator size="large" color="#3B82F6" />
+          <Text className="text-zinc-500 text-xs mt-3">Завантаження кімнат...</Text>
         </View>
       ) : rooms.length === 0 ? (
         <View className="flex-1 justify-center items-center px-6">
-          <View className="w-16 h-16 rounded-3xl bg-secondary border border-surfaceLight items-center justify-center mb-4">
-            <Ionicons name="chatbubbles-outline" size={32} color={COLORS.textMuted} />
+          <View className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center mb-4">
+            <Ionicons name="chatbubbles-outline" size={32} color="#71717A" />
           </View>
           <Text className="text-white text-lg font-bold text-center">Немає активних кімнат</Text>
-          <Text className="text-textMuted text-sm text-center mt-1">
+          <Text className="text-zinc-400 text-sm text-center mt-1">
             Створіть першу кімнату за допомогою кнопки «+» угорі
           </Text>
         </View>
@@ -109,12 +112,12 @@ export default function HomeScreen() {
         <FlatList
           data={rooms}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ paddingVertical: 4 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={COLORS.primary}
+              tintColor="#3B82F6"
             />
           }
           renderItem={({ item }) => (
