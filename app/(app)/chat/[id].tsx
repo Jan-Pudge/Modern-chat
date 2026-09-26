@@ -10,12 +10,13 @@ import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { fetch } from "expo/fetch";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -73,6 +74,24 @@ export default function ChatRoomScreen() {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVideoRecorderVisible, setIsVideoRecorderVisible] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setIsKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const bottomPadding = isKeyboardVisible ? 0 : Math.max(insets.bottom, 10);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
@@ -324,9 +343,10 @@ export default function ChatRoomScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-zinc-950"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      style={{ flex: 1 }}
+      className="flex-1 bg-zinc-950"
     >
       <Stack.Screen
         options={{
@@ -380,7 +400,9 @@ export default function ChatRoomScreen() {
         keyExtractor={(item) => item._id}
         inverted={true}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16 }}
+        style={{ flex: 1 }}
         className="flex-1 bg-zinc-950"
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.3}
@@ -454,7 +476,7 @@ export default function ChatRoomScreen() {
 
       {recorderState.isRecording ? (
         <View
-          style={{ paddingBottom: Math.max(insets.bottom, 10) }}
+          style={{ paddingBottom: bottomPadding }}
           className="flex-row items-center justify-between px-4 py-2.5 bg-zinc-950 border-t border-zinc-800"
         >
           <View className="flex-row items-center gap-3">
@@ -480,7 +502,7 @@ export default function ChatRoomScreen() {
         </View>
       ) : (
         <View
-          style={{ paddingBottom: Math.max(insets.bottom, 10) }}
+          style={{ paddingBottom: bottomPadding }}
           className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
         >
           <TouchableOpacity

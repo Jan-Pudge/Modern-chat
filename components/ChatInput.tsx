@@ -6,15 +6,18 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../constants/theme";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
@@ -35,9 +38,28 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   replyTo,
   onCancelReply,
 }) => {
+  const insets = useSafeAreaInsets();
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isVideoRecorderVisible, setIsVideoRecorderVisible] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setIsKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const bottomPadding = isKeyboardVisible ? 0 : Math.max(insets.bottom, 10);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
@@ -209,7 +231,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {recorderState.isRecording ? (
-        <View className="flex-row items-center justify-between px-4 py-2.5 border-t border-zinc-800 bg-zinc-950">
+        <View
+          style={{ paddingBottom: bottomPadding }}
+          className="flex-row items-center justify-between px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
+        >
           <View className="flex-row items-center gap-3">
             <View className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
             <Text className="text-white font-medium text-sm">
@@ -234,7 +259,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </View>
         </View>
       ) : (
-        <View className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950">
+        <View
+          style={{ paddingBottom: bottomPadding }}
+          className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
+        >
           <TextInput
             value={text}
             onChangeText={setText}
