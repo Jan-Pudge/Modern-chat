@@ -353,10 +353,7 @@ export default function ChatRoomScreen() {
       behavior="padding"
       enabled={Platform.OS === "ios"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      style={{
-        flex: 1,
-        paddingBottom: Platform.OS === "android" ? keyboardHeight : 0,
-      }}
+      style={{ flex: 1 }}
       className="flex-1 bg-zinc-950"
     >
       <Stack.Screen
@@ -451,134 +448,139 @@ export default function ChatRoomScreen() {
 
       {typingUsers && typingUsers.length > 0 && <TypingDots typingUsers={typingUsers} />}
 
-      {replyTarget && (
-        <ReplyPreviewBar
-          replyTarget={replyTarget}
-          onCancel={() => setReplyTarget(null)}
-        />
-      )}
-
-      {editingMessageId && (
-        <View className="flex-row items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 border-l-2 border-l-amber-500">
-          <View className="flex-row items-center flex-1 mr-2">
-            <Ionicons name="pencil" size={16} color="#F59E0B" style={{ marginRight: 6 }} />
-            <Text className="text-white text-xs font-semibold">Редагування повідомлення</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              setEditingMessageId(null);
-              setInputText("");
-            }}
-          >
-            <Ionicons name="close" size={20} color="#71717A" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {selectedImageUri && (
-        <View className="flex-row items-center px-4 py-2 bg-zinc-900 border-t border-zinc-800">
-          <Image source={{ uri: selectedImageUri }} className="w-12 h-12 rounded-xl mr-3 border border-zinc-700" />
-          <Text className="text-white text-xs flex-1">Фото прикріплено</Text>
-          <TouchableOpacity onPress={() => setSelectedImageUri(null)}>
-            <Ionicons name="close-circle" size={22} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {recorderState.isRecording ? (
-        <View
-          style={{ paddingBottom: bottomPadding }}
-          className="flex-row items-center justify-between px-4 py-2.5 bg-zinc-950 border-t border-zinc-800"
-        >
-          <View className="flex-row items-center gap-3">
-            <View className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <Text className="text-white font-medium text-sm">Запис: {recordingSeconds} с</Text>
-          </View>
-
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity
-              onPress={cancelRecording}
-              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-70"
-            >
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={stopAndSendRecording}
-              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80"
-            >
-              <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <View
-          style={{ paddingBottom: bottomPadding }}
-          className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
-        >
-          <TouchableOpacity
-            onPress={pickImage}
-            disabled={isSubmitting}
-            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 mr-2 active:opacity-70"
-          >
-            <Ionicons name="attach" size={22} color="#A1A1AA" />
-          </TouchableOpacity>
-
-          <TextInput
-            className="flex-1 text-white py-2.5 px-4 mr-2 bg-zinc-900 rounded-full text-sm border border-zinc-800"
-            style={{ maxHeight: 120 }}
-            placeholder={
-              editingMessageId
-                ? "Змініть текст..."
-                : replyTarget
-                ? `Відповідь для ${replyTarget.senderName}...`
-                : selectedImageUri
-                ? "Додайте підпис до фото..."
-                : "Напишіть повідомлення..."
-            }
-            placeholderTextColor="#71717A"
-            value={inputText}
-            onChangeText={handleTextChange}
-            multiline
+      <View
+        style={{ paddingBottom: Platform.OS === "android" ? keyboardHeight : 0 }}
+        className="bg-zinc-950"
+      >
+        {replyTarget && (
+          <ReplyPreviewBar
+            replyTarget={replyTarget}
+            onCancel={() => setReplyTarget(null)}
           />
+        )}
 
-          {inputText.trim().length > 0 || selectedImageUri ? (
+        {editingMessageId && (
+          <View className="flex-row items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 border-l-2 border-l-amber-500">
+            <View className="flex-row items-center flex-1 mr-2">
+              <Ionicons name="pencil" size={16} color="#F59E0B" style={{ marginRight: 6 }} />
+              <Text className="text-white text-xs font-semibold">Редагування повідомлення</Text>
+            </View>
             <TouchableOpacity
-              onPress={handleSend}
-              disabled={isSubmitting}
-              className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80 shadow-sm"
+              onPress={() => {
+                setEditingMessageId(null);
+                setInputText("");
+              }}
             >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Ionicons
-                  name={editingMessageId ? "checkmark" : "arrow-up"}
-                  size={20}
-                  color="#FFFFFF"
-                />
-              )}
+              <Ionicons name="close" size={20} color="#71717A" />
             </TouchableOpacity>
-          ) : (
-            <View className="flex-row items-center gap-2">
+          </View>
+        )}
+
+        {selectedImageUri && (
+          <View className="flex-row items-center px-4 py-2 bg-zinc-900 border-t border-zinc-800">
+            <Image source={{ uri: selectedImageUri }} className="w-12 h-12 rounded-xl mr-3 border border-zinc-700" />
+            <Text className="text-white text-xs flex-1">Фото прикріплено</Text>
+            <TouchableOpacity onPress={() => setSelectedImageUri(null)}>
+              <Ionicons name="close-circle" size={22} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {recorderState.isRecording ? (
+          <View
+            style={{ paddingBottom: bottomPadding }}
+            className="flex-row items-center justify-between px-4 py-2.5 bg-zinc-950 border-t border-zinc-800"
+          >
+            <View className="flex-row items-center gap-3">
+              <View className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <Text className="text-white font-medium text-sm">Запис: {recordingSeconds} с</Text>
+            </View>
+
+            <View className="flex-row items-center gap-3">
               <TouchableOpacity
-                onPress={() => setIsVideoRecorderVisible(true)}
-                disabled={isSubmitting}
-                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
+                onPress={cancelRecording}
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-70"
               >
-                <Ionicons name="videocam-outline" size={20} color="#A1A1AA" />
+                <Ionicons name="trash-outline" size={20} color="#EF4444" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={startRecording}
-                disabled={isSubmitting}
-                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
+                onPress={stopAndSendRecording}
+                className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80"
               >
-                <Ionicons name="mic-outline" size={20} color="#A1A1AA" />
+                <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-          )}
-        </View>
-      )}
+          </View>
+        ) : (
+          <View
+            style={{ paddingBottom: bottomPadding }}
+            className="flex-row items-center px-4 py-2.5 border-t border-zinc-800 bg-zinc-950"
+          >
+            <TouchableOpacity
+              onPress={pickImage}
+              disabled={isSubmitting}
+              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 mr-2 active:opacity-70"
+            >
+              <Ionicons name="attach" size={22} color="#A1A1AA" />
+            </TouchableOpacity>
+
+            <TextInput
+              className="flex-1 text-white py-2.5 px-4 mr-2 bg-zinc-900 rounded-full text-sm border border-zinc-800"
+              style={{ maxHeight: 120 }}
+              placeholder={
+                editingMessageId
+                  ? "Змініть текст..."
+                  : replyTarget
+                  ? `Відповідь для ${replyTarget.senderName}...`
+                  : selectedImageUri
+                  ? "Додайте підпис до фото..."
+                  : "Напишіть повідомлення..."
+              }
+              placeholderTextColor="#71717A"
+              value={inputText}
+              onChangeText={handleTextChange}
+              multiline
+            />
+
+            {inputText.trim().length > 0 || selectedImageUri ? (
+              <TouchableOpacity
+                onPress={handleSend}
+                disabled={isSubmitting}
+                className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center flex-shrink-0 active:opacity-80 shadow-sm"
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Ionicons
+                    name={editingMessageId ? "checkmark" : "arrow-up"}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                )}
+              </TouchableOpacity>
+            ) : (
+              <View className="flex-row items-center gap-2">
+                <TouchableOpacity
+                  onPress={() => setIsVideoRecorderVisible(true)}
+                  disabled={isSubmitting}
+                  className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
+                >
+                  <Ionicons name="videocam-outline" size={20} color="#A1A1AA" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={startRecording}
+                  disabled={isSubmitting}
+                  className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center flex-shrink-0 active:opacity-80"
+                >
+                  <Ionicons name="mic-outline" size={20} color="#A1A1AA" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
 
       <VideoNoteRecorder
         visible={isVideoRecorderVisible}
