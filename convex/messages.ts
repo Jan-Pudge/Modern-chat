@@ -1,7 +1,105 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
+import { mutation, query, MutationCtx } from "./_generated/server";
+
+/**
+ * Відправляє push-сповіщення через фоновий планувальник Convex:
+ * 1. Якщо це відповідь (Reply) — автору оригінального повідомлення.
+ * 2. Усім іншим учасникам кімнати (творцю кімнати та тим, хто писав у цей чат).
+ */
+async function scheduleMessagePushNotifications(
+  ctx: MutationCtx,
+  {
+    chatRoomId,
+    senderId,
+    senderName,
+    bodyText,
+    messageId,
+    replyToId,
+  }: {
+    chatRoomId: Id<"chatRooms">;
+    senderId: Id<"users">;
+    senderName: string;
+    bodyText: string;
+    messageId: Id<"messages">;
+    replyToId?: Id<"messages">;
+  }
+) {
+  const room = await ctx.db.get(chatRoomId);
+  const roomTitle = room?.title ?? "Чат";
+
+  let replyAuthorId: Id<"users"> | null = null;
+
+  // СЦЕНАРІЙ А: Якщо це відповідь на чиєсь повідомлення (Reply)
+  if (replyToId) {
+    const originalMessage = await ctx.db.get(replyToId);
+    if (originalMessage && originalMessage.senderId !== senderId) {
+      replyAuthorId = originalMessage.senderId;
+      const originalAuthor = await ctx.db.get(originalMessage.senderId);
+
+      if (originalAuthor?.pushToken) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.pushNotifications.sendPushNotification,
+          {
+            pushToken: originalAuthor.pushToken,
+            title: `💬 Відповідь від ${senderName}`,
+            body: `${senderName} відповів(-ла) у "${roomTitle}": ${bodyText}`,
+            data: {
+              type: "reply",
+              roomId: chatRoomId,
+              messageId,
+            },
+          }
+        );
+      }
+    }
+  }
+
+  // СЦЕНАРІЙ Б: Відправка решті учасників кімнати
+  const recentMessages = await ctx.db
+    .query("messages")
+    .withIndex("by_chat_room", (q) => q.eq("chatRoomId", chatRoomId))
+    .collect();
+
+  const recipientIds = new Set<Id<"users">>();
+
+  // Додаємо творця кімнати, якщо це не автор повідомлення та не автор реплаю
+  if (room?.creatorId && room.creatorId !== senderId && room.creatorId !== replyAuthorId) {
+    recipientIds.add(room.creatorId);
+  }
+
+  // Додаємо всіх, хто писав у цю кімнату раніше
+  for (const msg of recentMessages) {
+    if (msg.senderId !== senderId && msg.senderId !== replyAuthorId) {
+      recipientIds.add(msg.senderId);
+    }
+  }
+
+  // Відправляємо пуші всім знайденим учасникам
+  for (const recipientId of recipientIds) {
+    const recipient = await ctx.db.get(recipientId);
+    if (recipient?.pushToken) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.pushNotifications.sendPushNotification,
+        {
+          pushToken: recipient.pushToken,
+          title: `${senderName} (${roomTitle})`,
+          body: bodyText,
+          data: {
+            type: "message",
+            roomId: chatRoomId,
+            messageId,
+          },
+        }
+      );
+    }
+  }
+}
 
 export const listMessages = query({
   args: { chatRoomId: v.id("chatRooms") },
@@ -77,6 +175,15 @@ export const sendMessage = mutation({
     await ctx.db.patch(args.chatRoomId, {
       lastMessage: `${user.name ?? "Користувач"}: ${trimmedContent}`,
       lastMessageAt: Date.now(),
+    });
+
+    await scheduleMessagePushNotifications(ctx, {
+      chatRoomId: args.chatRoomId,
+      senderId: userId,
+      senderName: user.name ?? user.email ?? "Користувач",
+      bodyText: trimmedContent,
+      messageId,
+      replyToId: args.replyToId,
     });
 
     return messageId;
@@ -193,6 +300,15 @@ export const sendMediaMessage = mutation({
       lastMessageAt: Date.now(),
     });
 
+    await scheduleMessagePushNotifications(ctx, {
+      chatRoomId: args.chatRoomId,
+      senderId: userId,
+      senderName: user.name ?? user.email ?? "Користувач",
+      bodyText: args.caption?.trim() || "📷 Фотографія",
+      messageId,
+      replyToId: args.replyToId,
+    });
+
     return messageId;
   },
 });
@@ -250,6 +366,15 @@ export const sendAudioMessage = mutation({
       lastMessageAt: Date.now(),
     });
 
+    await scheduleMessagePushNotifications(ctx, {
+      chatRoomId: args.chatRoomId,
+      senderId: userId,
+      senderName: user.name ?? fallbackName,
+      bodyText: "🎤 Голосове повідомлення",
+      messageId,
+      replyToId: args.replyToId,
+    });
+
     return messageId;
   },
 });
@@ -298,6 +423,15 @@ export const sendVideoNoteMessage = mutation({
     await ctx.db.patch(args.chatRoomId, {
       lastMessage: "📹 Відеоповідомлення",
       lastMessageAt: Date.now(),
+    });
+
+    await scheduleMessagePushNotifications(ctx, {
+      chatRoomId: args.chatRoomId,
+      senderId: userId,
+      senderName: user.name ?? fallbackName,
+      bodyText: "📹 Відеоповідомлення",
+      messageId,
+      replyToId: args.replyToId,
     });
 
     return messageId;

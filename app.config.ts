@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { ConfigContext, ExpoConfig } from "expo/config";
 
 const APP_NAME = "Modern Chat";
@@ -13,6 +15,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   console.log("📦 URL бази даних Convex:", process.env.EXPO_PUBLIC_CONVEX_URL);
 
   const isDev = environment === "development";
+  const googleServicesExists = fs.existsSync(
+    path.resolve(__dirname, "google-services.json")
+  );
 
   return {
     ...config,
@@ -37,6 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
     android: {
       package: isDev ? `${PACKAGE_NAME}.dev` : PACKAGE_NAME,
+      ...(googleServicesExists ? { googleServicesFile: "./google-services.json" } : {}),
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
         foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -48,6 +54,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       permissions: [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS",
       ],
     },
 
@@ -85,7 +93,25 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
       "expo-secure-store",
       ["expo-video"],
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#2563EB",
+          defaultChannel: "default",
+        },
+      ],
     ],
+
+    extra: {
+      ...config.extra,
+      eas: {
+        projectId:
+          config.extra?.eas?.projectId ??
+          process.env.EAS_PROJECT_ID ??
+          "ВАШ_EAS_PROJECT_ID",
+      },
+    },
 
     experiments: {
       typedRoutes: true,
