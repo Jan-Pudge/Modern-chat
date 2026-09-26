@@ -26,7 +26,7 @@ export default function InitialLayout() {
       }
     }
 
-    SplashScreen.hideAsync();
+    SplashScreen.hideAsync().catch(() => {});
   }, [isAuthenticated, isLoading, segments, router]);
 
   if (isLoading) {

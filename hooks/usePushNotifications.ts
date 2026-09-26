@@ -1,39 +1,47 @@
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { useConvexAuth } from "@convex-dev/auth/react";
+import type * as NotificationsType from "expo-notifications";
 import { api } from "../convex/_generated/api";
 
-/**
- * Налаштування поведінки сповіщень, коли додаток активний (Foreground).
- * Показуємо банер, граємо звук та додаємо бейдж.
- */
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 /**
- * Хук для реєстрації Push-сповіщень та обробки переходів у чат (Deep Linking)
+ * Безпечне отримання модуля expo-notifications.
+ * В Expo Go на Android (з SDK 53) та на Web модуль не підтримується і викидає фатальну помилку
+ * при статичному імпорті, тому використовуємо ледаче динамічне завантаження require()
+ * лише у підтримуваних середовищах (Development Build / Standalone).
+ */
+function getNotificationsModule(): typeof NotificationsType | null {
+  if (isExpoGo || Platform.OS === "web") {
+    return null;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require("expo-notifications");
+  } catch (error) {
+    console.warn("⚠️ expo-notifications недоступний у цьому середовищі:", error);
+    return null;
+  }
+}
+
+/**
+ * Хук для реєстрації Push-сповіщень та обробки переходів у чат (Deep Linking).
+ * Повністю безпечний для Expo Go — якщо додаток запущено в Expo Go, сповіщення
+ * деактивуються без крашу додатку.
  */
 export function usePushNotifications() {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  // @ts-ignore - savePushToken буде типізовано після генерації api.d.ts
+  // @ts-ignore - savePushToken типізовано у схемі Convex
   const savePushToken = useMutation(api.users.savePushToken);
   const router = useRouter();
 
-  // Обробка сповіщення при холодному старті додатку (якщо додаток був повністю закритий)
-  const lastNotificationResponse = Notifications.useLastNotificationResponse();
-
-  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const notificationListener = useRef<NotificationsType.EventSubscription | null>(null);
+  const responseListener = useRef<NotificationsType.EventSubscription | null>(null);
 
   /**
    * Маршрутизація (Deep Linking) за даними зі сповіщення
@@ -52,24 +60,53 @@ export function usePushNotifications() {
     }
   };
 
-  // Ефект 1: Обробка переходу при "холодному старті"
+  // Ефект 1: Ініціалізація обробника сповіщень та обробка переходу при холодному старті
   useEffect(() => {
-    if (
-      lastNotificationResponse &&
-      lastNotificationResponse.actionIdentifier ===
-        Notifications.DEFAULT_ACTION_IDENTIFIER
-    ) {
-      const data = lastNotificationResponse.notification.request.content.data;
-      handleNotificationNavigation(data);
+    const Notifications = getNotificationsModule();
+    if (!Notifications) {
+      if (isExpoGo) {
+        console.log(
+          "ℹ️ Push-сповіщення деактивовано в Expo Go (потрібен Development Build для тестування пушів на Android)."
+        );
+      }
+      return;
     }
-  }, [lastNotificationResponse]);
+
+    try {
+      // Налаштування поведінки сповіщень у Foreground
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+
+      // Безпечна перевірка натискання на сповіщення при холодному старті
+      Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (
+          response &&
+          response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER
+        ) {
+          const data = response.notification.request.content.data;
+          handleNotificationNavigation(data);
+        }
+      });
+    } catch (e) {
+      console.warn("⚠️ Не вдалося ініціалізувати обробник сповіщень:", e);
+    }
+  }, []);
 
   // Ефект 2: Отримання токена та підписка на події сповіщень
   useEffect(() => {
     // Реєструємо токен тільки для авторизованого користувача
     if (isLoading || !isAuthenticated) return;
 
-    registerForPushNotificationsAsync()
+    const Notifications = getNotificationsModule();
+    if (!Notifications) return;
+
+    registerForPushNotificationsAsync(Notifications)
       .then((token) => {
         if (token) {
           console.log("📲 Збереження Expo Push Token у Convex:", token);
@@ -112,9 +149,10 @@ export function usePushNotifications() {
 /**
  * Налаштування Android Notification Channel та безпечне отримання Push-токена
  */
-async function registerForPushNotificationsAsync(): Promise<string | null> {
-  // На вебі push-сповіщення через Expo Notifications не підтримуються безпосередньо
-  if (Platform.OS === "web") {
+async function registerForPushNotificationsAsync(
+  Notifications: typeof NotificationsType
+): Promise<string | null> {
+  if (isExpoGo || Platform.OS === "web") {
     return null;
   }
 
@@ -134,7 +172,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
   }
 
   // 2. Перевірка та запит системних дозволів
-  let finalStatus: Notifications.PermissionStatus;
+  let finalStatus: NotificationsType.PermissionStatus;
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     finalStatus = existingStatus;

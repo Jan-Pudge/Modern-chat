@@ -8,7 +8,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import InitialLayout from "../components/InitialLayout";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convexUrl =
+  process.env.EXPO_PUBLIC_CONVEX_URL ||
+  "https://blessed-goat-837.eu-west-1.convex.cloud";
+
+const convex = new ConvexReactClient(convexUrl, {
   unsavedChangesWarning: false,
 });
 
