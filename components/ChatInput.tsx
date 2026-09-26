@@ -42,16 +42,23 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isVideoRecorderVisible, setIsVideoRecorderVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     const showSub = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      () => setIsKeyboardVisible(true)
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setIsKeyboardVisible(true);
+      }
     );
     const hideSub = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setIsKeyboardVisible(false)
+      () => {
+        setKeyboardHeight(0);
+        setIsKeyboardVisible(false);
+      }
     );
     return () => {
       showSub.remove();
@@ -200,7 +207,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   );
 
   return (
-    <View className="bg-zinc-950">
+    <View
+      style={{ paddingBottom: Platform.OS === "android" ? keyboardHeight : 0 }}
+      className="bg-zinc-950"
+    >
       {replyTo && (
         <View className="flex-row items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 border-l-2 border-l-blue-500">
           <View className="flex-row items-center flex-1 mr-2">

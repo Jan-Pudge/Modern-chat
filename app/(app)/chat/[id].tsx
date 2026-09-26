@@ -74,16 +74,23 @@ export default function ChatRoomScreen() {
   const [replyTarget, setReplyTarget] = useState<ReplyTarget | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVideoRecorderVisible, setIsVideoRecorderVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
     const showSub = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      () => setIsKeyboardVisible(true)
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setIsKeyboardVisible(true);
+      }
     );
     const hideSub = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setIsKeyboardVisible(false)
+      () => {
+        setKeyboardHeight(0);
+        setIsKeyboardVisible(false);
+      }
     );
     return () => {
       showSub.remove();
@@ -343,9 +350,13 @@ export default function ChatRoomScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding"
+      enabled={Platform.OS === "ios"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      style={{ flex: 1 }}
+      style={{
+        flex: 1,
+        paddingBottom: Platform.OS === "android" ? keyboardHeight : 0,
+      }}
       className="flex-1 bg-zinc-950"
     >
       <Stack.Screen
