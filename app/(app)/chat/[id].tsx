@@ -6,10 +6,10 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
-import { File } from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { fetch } from "expo/fetch";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,6 +22,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Vibration,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,7 +31,6 @@ import { ReplyPreviewBar, ReplyTarget } from "../../../components/ReplyPreviewBa
 import { MessageItemData, SwipeableMessageItem } from "../../../components/SwipeableMessageItem";
 import { TypingDots } from "../../../components/TypingDots";
 import { VideoNoteRecorder } from "../../../components/VideoNoteRecorder";
-import { COLORS } from "../../../constants/theme";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 
@@ -66,6 +66,17 @@ export default function ChatRoomScreen() {
   const editMessage = useMutation(api.messages.editMessage);
   const deleteMessage = useMutation(api.messages.deleteMessage);
   const setTyping = useMutation(api.typing.setTyping);
+  const toggleMuteRoom = useMutation(api.rooms.toggleMuteRoom);
+
+  const handleToggleMute = async () => {
+    try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await toggleMuteRoom({ roomId: chatRoomId });
+    } catch (error) {
+      console.error("Помилка зміни сповіщень:", error);
+    }
+  };
 
   const [inputText, setInputText] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<Id<"messages"> | null>(null);
@@ -132,7 +143,7 @@ export default function ChatRoomScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        quality: 0.8,
+        quality: 0.6,
       });
 
       if (!result.canceled && result.assets[0]?.uri) {
@@ -167,6 +178,8 @@ export default function ChatRoomScreen() {
     }
 
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
       recordingStartTimeRef.current = Date.now();
@@ -178,6 +191,8 @@ export default function ChatRoomScreen() {
 
   const cancelRecording = async () => {
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await audioRecorder.stop();
     } catch (error) {
       console.error("Помилка скасування запису:", error);
@@ -186,6 +201,8 @@ export default function ChatRoomScreen() {
 
   const stopAndSendRecording = async () => {
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const elapsedMs = Date.now() - recordingStartTimeRef.current;
       const durationSeconds = Math.max(1, Math.floor(elapsedMs / 1000));
 
@@ -200,21 +217,18 @@ export default function ChatRoomScreen() {
       setIsSubmitting(true);
 
       const uploadUrl = await generateUploadUrl();
-      const file = new File(uri);
-
-      const uploadResult = await fetch(uploadUrl, {
-        method: "POST",
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, uri, {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: { "Content-Type": "audio/m4a" },
-        body: file,
       });
 
-      if (!uploadResult.ok) {
-        const errorText = await uploadResult.text();
-        console.error("Помилка Convex Storage:", errorText);
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        console.error("Помилка Convex Storage:", uploadResult.body);
         throw new Error("Не вдалося завантажити аудіо");
       }
 
-      const { storageId } = await uploadResult.json();
+      const { storageId } = JSON.parse(uploadResult.body);
 
       await sendAudioMessage({
         chatRoomId,
@@ -238,19 +252,19 @@ export default function ChatRoomScreen() {
     try {
       setIsSubmitting(true);
       const uploadUrl = await generateUploadUrl();
-      const file = new File(videoUri);
 
-      const uploadResult = await fetch(uploadUrl, {
-        method: "POST",
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, videoUri, {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: { "Content-Type": "video/mp4" },
-        body: file,
       });
 
-      if (!uploadResult.ok) {
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        console.error("Помилка Convex Storage (video):", uploadResult.body);
         throw new Error("Не вдалося завантажити відео");
       }
 
-      const { storageId } = await uploadResult.json();
+      const { storageId } = JSON.parse(uploadResult.body);
 
       await sendVideoNoteMessage({
         chatRoomId,
@@ -285,17 +299,19 @@ export default function ChatRoomScreen() {
         setEditingMessageId(null);
       } else if (selectedImageUri) {
         const uploadUrl = await generateUploadUrl();
-        const file = new File(selectedImageUri);
 
-        const uploadResult = await fetch(uploadUrl, {
-          method: "POST",
+        const uploadResult = await FileSystem.uploadAsync(uploadUrl, selectedImageUri, {
+          httpMethod: "POST",
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
           headers: { "Content-Type": "image/jpeg" },
-          body: file,
         });
 
-        if (!uploadResult.ok) throw new Error("Не вдалося завантажити зображення");
+        if (uploadResult.status < 200 || uploadResult.status >= 300) {
+          console.error("Помилка Convex Storage (image):", uploadResult.body);
+          throw new Error("Не вдалося завантажити зображення");
+        }
 
-        const { storageId } = await uploadResult.json();
+        const { storageId } = JSON.parse(uploadResult.body);
 
         await sendMediaMessage({
           chatRoomId,
@@ -393,12 +409,26 @@ export default function ChatRoomScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push(`/settings/${chatRoomId}`)}
-              className="p-1"
-            >
-              <Ionicons name="information-circle-outline" size={24} color="#60A5FA" />
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-1.5">
+              <TouchableOpacity
+                onPress={handleToggleMute}
+                className="p-1.5 rounded-full active:bg-zinc-800"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name={room?.isMuted ? "notifications-off" : "notifications-outline"}
+                  size={22}
+                  color={room?.isMuted ? "#EF4444" : "#94A3B8"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push(`/settings/${chatRoomId}`)}
+                className="p-1"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="information-circle-outline" size={24} color="#60A5FA" />
+              </TouchableOpacity>
+            </View>
           ),
         }}
       />
@@ -449,7 +479,10 @@ export default function ChatRoomScreen() {
       {typingUsers && typingUsers.length > 0 && <TypingDots typingUsers={typingUsers} />}
 
       <View
-        style={{ paddingBottom: Platform.OS === "android" ? keyboardHeight : 0 }}
+        style={{ 
+          paddingBottom: Platform.OS === "android" ? (keyboardHeight > 0 ? keyboardHeight + 50 : 0) : 0,
+          marginBottom: 6 
+        }}
         className="bg-zinc-950"
       >
         {replyTarget && (

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, Vibration, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -66,11 +67,15 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
   const translateX = useSharedValue(0);
 
   const triggerReply = () => {
+    Vibration.vibrate(50);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onReply(item);
   };
 
   const handleSelectEmoji = async (emoji: string) => {
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await toggleReaction({ messageId: item._id, emoji });
     } catch (error) {
       console.error("Помилка встановлення реакції:", error);
@@ -120,7 +125,11 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
           <View className={`max-w-[82%] ${isOwn ? "items-end" : "items-start"}`}>
             <TouchableOpacity
               activeOpacity={0.9}
-              onLongPress={() => setShowReactionPicker(true)}
+              onLongPress={() => {
+                Vibration.vibrate(50);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setShowReactionPicker(true);
+              }}
               delayLongPress={200}
               className={`w-full ${
                 item.videoUrl && item.isVideoNote
@@ -181,7 +190,11 @@ export const SwipeableMessageItem: React.FC<SwipeableMessageItemProps> = ({
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => onImagePress?.(item.imageUrl!)}
-                  onLongPress={() => setShowReactionPicker(true)}
+                  onLongPress={() => {
+                    Vibration.vibrate(50);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setShowReactionPicker(true);
+                  }}
                   delayLongPress={200}
                 >
                   <Image

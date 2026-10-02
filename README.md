@@ -1,56 +1,94 @@
-# Welcome to your Expo app 👋
+# 💬 Modern Chat — Мобільний месенджер
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Сучасний повнофункціональний кросплатформний мобільний месенджер, розроблений на базі **React Native**, **Expo SDK 52+** та реактивного бекенду **Convex**.
 
-## Get started
+---
 
-1. Install dependencies
+## 🌟 Основні можливості
 
-   ```bash
-   npm install
-   ```
+### 🔐 Безпечна автентифікація
+- **Вхід через Google (Google OAuth 2.0):** Швидка авторизація в один клік через системний браузер (`expo-web-browser`) та зворотне перенаправлення за протоколом **Deep Linking**.
+- **Класична авторизація:** Реєстрація та вхід за паролем через **Convex Auth**.
+- **Безпечне збереження сесій:** Збереження токенів авторизації у зашифрованому сховищі **Expo SecureStore**.
+- **Профілі користувачів:** Відображення аватарок (з Google або завантажених у Convex Storage), імені, біографії та статистики повідомлень.
 
-2. Start the app
+### ⚡️ Чат у реальному часі
+- **Реактивні оновлення:** Миттєва доставка нових повідомлень та змін без перезавантаження сторінки через реактивні WebSocket-підписки Convex.
+- **Індикатор набору тексту (Typing Indicator):** Відображення в реальному часі, коли співрозмовник друкує текст.
+- **Керування кімнатами:** Створення відкритих чат-кімнат, налаштування та швидке видалення свайпом на базі `react-native-gesture-handler`.
 
-   ```bash
-   npx expo start
-   ```
+### 📷 Медіа-повідомлення
+- **Фотографії:** Вибір зображень із галереї або камери (`expo-image-picker`) та завантаження у **Convex Storage**.
+- **Голосові повідомлення:** Запис та відтворення аудіо на базі сучасного офіційного пакета **`expo-audio`** із відображенням тривалості та форми хвилі.
+- **Відеокружечки (Telegram-style Video Notes):** Зйомка круглих відеоповідомлень через **`expo-camera`** та плавне відтворення через **`expo-video`**.
+- **Оптимізоване завантаження:** Пряма бінарна передача медіа через нативний клієнт `FileSystem.uploadAsync` без перевантаження оперативної пам'яті (захист від OutOfMemory).
 
-In the output, you'll find options to open the app in a
+### 💬 Взаємодія з повідомленнями
+- **Відповіді на повідомлення (Swipe-to-Reply):** Швидкий жест свайпу вправо для відповіді на конкретний меседж із цитуванням.
+- **Швидкі емодзі-реакції (Reactions):** Додавання та зняття реакцій (👍, ❤️, 🔥, 😂, 😮, 😢) у реальному часі з лічильниками.
+- **Редагування та видалення:** Зміна тексту повідомлень з позначкою `(ред.)` та видалення з очищенням прикріплених файлів зі сховища.
+- **Курсорна пагінація:** Ефективне завантаження історії чату через `<FlatList inverted={true} />` та курсорні запити Convex.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 🔔 Push-сповіщення (Expo Notifications + Firebase FCM v1)
+- Системні сповіщення про нові повідомлення, відповіді та реакції у фоновому режимі та при заблокованому екрані.
+- Налаштування системного **Android Notification Channel** з високим пріоритетом, звуком та вібрацією.
+- **Deep Linking:** Натискання на сповіщення автоматично відкриває відповідну чат-кімнату.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🛠 Стек технологій
 
-When you're ready, run:
+- **Мобільний клієнт:** React Native (Expo SDK 52+, New Architecture)
+- **Маршрутизація:** Expo Router v4 (файлова структура)
+- **Стилізація:** Tailwind CSS / NativeWind v4
+- **Бекенд & Realtime DB:** [Convex](https://convex.dev)
+- **Авторизація:** `@convex-dev/auth`, `@auth/core/providers/google`, `expo-web-browser`
+- **Аудіо та Відео:** `expo-audio`, `expo-video`, `expo-camera`
+- **Сповіщення:** `expo-notifications`, Firebase Cloud Messaging (FCM v1)
+- **Жести та анімації:** `react-native-gesture-handler`, `react-native-reanimated`
 
+---
+
+## 🚀 Встановлення та запуск
+
+### 1. Клонування репозиторію та встановлення залежностей:
 ```bash
-npm run reset-project
+git clone https://github.com/<ваш-акаунт>/modern-chat.git
+cd modern-chat
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Налаштування змінних середовища:
+Створіть файл `.env.local` у корені проєкту:
+```env
+EXPO_PUBLIC_CONVEX_URL=https://<your-convex-deployment>.convex.cloud
+```
 
-### Other setup steps
+### 3. Запуск сервера розробки:
+```bash
+npx expo start
+```
+- Натисніть **`a`** для запуску на підключеному Android-пристрої або емуляторі.
+- Натисніть **`w`** для відкриття веб-версії у браузері.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+---
 
-## Learn more
+## 📦 Локальна збірка автономного Android APK
 
-To learn more about developing your project with Expo, look at the following resources:
+Для збірки нативного релізного APK-файлу (Standalone APK під архітектуру `arm64-v8a`):
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. **Генерація нативного проєкту Android:**
+   ```bash
+   npx expo prebuild --platform android --clean
+   ```
 
-## Join the community
+2. **Компіляція APK через Gradle:**
+   ```bash
+   cd android
+   .\gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a
+   ```
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+3. **Готовий файл APK:**
+   ```text
+   android/app/build/outputs/apk/release/app-release.apk
+   ```

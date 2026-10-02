@@ -91,7 +91,7 @@ export const getUserProfile = query({
 });
 
 /**
- * Зберігає або оновлює ExponentPushToken поточного авторизованого користувача
+ * Saves or updates ExponentPushToken for current user.
  */
 export const savePushToken = mutation({
   args: {

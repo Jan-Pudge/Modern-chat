@@ -1,14 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { CameraType, CameraView, useCameraPermissions, useMicrophonePermissions } from "expo-camera";
+import * as Haptics from "expo-haptics";
 import { useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Modal,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Text,
+  TouchableOpacity,
+  Vibration,
+  View,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 import { COLORS } from "../constants/theme";
 
 type VideoNoteRecorderProps = {
@@ -33,6 +37,29 @@ export const VideoNoteRecorder = ({
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [micPermission, requestMicPermission] = useMicrophonePermissions();
 
+  const isFlippingRef = useRef(false);
+  const isRecordingRef = useRef(false);
+  const recordSecondsRef = useRef(0);
+
+  const toggleCameraFacing = () => {
+    if (isProcessing) return;
+    Vibration.vibrate(50);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    if (isRecordingRef.current) {
+      isFlippingRef.current = true;
+    }
+    setCameraFacing((prev) => (prev === "front" ? "back" : "front"));
+  };
+
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDuration(300)
+    .enabled(!isProcessing)
+    .onEnd(() => {
+      runOnJS(toggleCameraFacing)();
+    });
+
   const handleStartRecording = async () => {
     if (!cameraPermission?.granted) {
       const cam = await requestCameraPermission();
@@ -50,50 +77,88 @@ export const VideoNoteRecorder = ({
       }
     }
 
-    if (!cameraRef.current || isRecording) return;
+    if (!cameraRef.current || isRecordingRef.current) return;
 
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      isRecordingRef.current = true;
       setIsRecording(true);
       setRecordSeconds(0);
+      recordSecondsRef.current = 0;
+      isFlippingRef.current = false;
 
       timerRef.current = setInterval(() => {
         setRecordSeconds((prev) => {
-          if (prev >= 59) {
+          const next = prev + 1;
+          recordSecondsRef.current = next;
+          if (next >= 59) {
             handleStopRecording();
             return 60;
           }
-          return prev + 1;
+          return next;
         });
       }, 1000);
 
-      const videoRecordPromise = cameraRef.current.recordAsync({
-        maxDuration: 60,
-      });
+      const recordLoop = async () => {
+        let finalVideo = null;
+        while (isRecordingRef.current) {
+          isFlippingRef.current = false;
+          try {
+            const video = await cameraRef.current?.recordAsync({
+              maxDuration: 60,
+            });
 
-      const video = await videoRecordPromise;
+            if (isFlippingRef.current) {
+              isFlippingRef.current = false;
+            } else {
+              finalVideo = video;
+              break;
+            }
+          } catch {
+            break;
+          }
+        }
+        return finalVideo;
+      };
 
-      if (video?.uri) {
+      const video = await recordLoop();
+
+      if (video?.uri && !isFlippingRef.current) {
         setIsProcessing(true);
-        await onSendVideo(video.uri, recordSeconds || 1);
-        setIsProcessing(false);
-        handleClose();
+        try {
+          const durationToSend = Math.max(1, recordSecondsRef.current);
+          await onSendVideo(video.uri, durationToSend);
+          handleClose();
+        } catch (sendError) {
+          console.error("Помилка передачі відео:", sendError);
+        } finally {
+          setIsProcessing(false);
+        }
       }
     } catch (error) {
       console.error("Помилка запису відео:", error);
       Alert.alert("Помилка", "Не вдалося записати відео");
+      isRecordingRef.current = false;
       setIsRecording(false);
       setIsProcessing(false);
     }
   };
 
   const handleStopRecording = () => {
+    Vibration.vibrate(50);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (cameraRef.current && isRecording) {
-      cameraRef.current.stopRecording();
+    if (cameraRef.current && isRecordingRef.current) {
+      isRecordingRef.current = false;
       setIsRecording(false);
+      try {
+        cameraRef.current.stopRecording();
+      } catch {}
     }
   };
 
@@ -102,8 +167,15 @@ export const VideoNoteRecorder = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (cameraRef.current && isRecordingRef.current) {
+      try {
+        cameraRef.current.stopRecording();
+      } catch (e) {}
+    }
+    isRecordingRef.current = false;
     setIsRecording(false);
     setRecordSeconds(0);
+    recordSecondsRef.current = 0;
     setIsProcessing(false);
     onClose();
   };
@@ -116,45 +188,48 @@ export const VideoNoteRecorder = ({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <View className="flex-1 bg-black/90 justify-center items-center px-4">
-        <TouchableOpacity
-          onPress={handleClose}
-          disabled={isRecording || isProcessing}
-          className="absolute top-12 right-6 p-2 rounded-full bg-white/10"
-        >
-          <Ionicons name="close" size={26} color="#FFFFFF" />
-        </TouchableOpacity>
+      <GestureDetector gesture={doubleTapGesture}>
+        <View className="flex-1 bg-black/90 justify-center items-center px-4">
+          <TouchableOpacity
+            onPress={handleClose}
+            disabled={isRecording || isProcessing}
+            className="absolute top-12 right-6 p-2 rounded-full bg-white/10"
+          >
+            <Ionicons name="close" size={26} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        <View className="mb-6 items-center">
-          <View className="flex-row items-center bg-black/60 px-4 py-1.5 rounded-full border border-white/20">
-            {isRecording && <View className="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 animate-pulse" />}
-            <Text className="text-white font-mono text-base">
-              {formatSeconds(recordSeconds)} / 1:00
-            </Text>
-          </View>
-        </View>
-
-        <View className="w-72 h-72 rounded-full overflow-hidden border-4 border-primary items-center justify-center bg-surface relative">
-          <CameraView
-            ref={cameraRef}
-            style={{ width: "100%", height: "100%" }}
-            facing={cameraFacing}
-            mode="video"
-          />
-
-          {isProcessing && (
-            <View className="absolute inset-0 bg-black/70 items-center justify-center">
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text className="text-white text-xs font-semibold mt-2">Обробка відео...</Text>
+          <View className="mb-6 items-center">
+            <View className="flex-row items-center bg-black/60 px-4 py-1.5 rounded-full border border-white/20">
+              {isRecording && <View className="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 animate-pulse" />}
+              <Text className="text-white font-mono text-base">
+                {formatSeconds(recordSeconds)} / 1:00
+              </Text>
             </View>
-          )}
-        </View>
+          </View>
+
+          <View className="w-72 h-72 rounded-full overflow-hidden border-4 border-primary items-center justify-center bg-surface relative">
+            <CameraView
+              ref={cameraRef}
+              style={{ width: "100%", height: "100%" }}
+              facing={cameraFacing}
+              mode="video"
+            />
+
+            {isProcessing && (
+              <View className="absolute inset-0 bg-black/70 items-center justify-center">
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text className="text-white text-xs font-semibold mt-2">Обробка відео...</Text>
+              </View>
+            )}
+          </View>
 
         <View className="flex-row items-center justify-center gap-8 mt-10">
           <TouchableOpacity
-            disabled={isRecording || isProcessing}
-            onPress={() => setCameraFacing((prev) => (prev === "front" ? "back" : "front"))}
-            className="w-12 h-12 rounded-full bg-white/10 items-center justify-center active:bg-white/20"
+            disabled={isProcessing}
+            onPress={toggleCameraFacing}
+            className={`w-12 h-12 rounded-full items-center justify-center ${
+              isProcessing ? "bg-white/5 opacity-40" : "bg-white/10 active:bg-white/20"
+            }`}
           >
             <Ionicons name="camera-reverse-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
@@ -176,7 +251,8 @@ export const VideoNoteRecorder = ({
 
           <View className="w-12 h-12" />
         </View>
-      </View>
+        </View>
+      </GestureDetector>
     </Modal>
   );
 };

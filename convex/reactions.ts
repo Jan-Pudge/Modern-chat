@@ -38,13 +38,13 @@ export const toggleReaction = mutation({
         createdAt: Date.now(),
       });
 
-      // Надсилаємо пуш автору повідомлення (якщо реакцію поставив інший користувач)
+      // Notify message author
       if (message.senderId !== userId) {
         const messageAuthor = await ctx.db.get(message.senderId);
         const sender = await ctx.db.get(userId);
         const room = await ctx.db.get(message.chatRoomId);
 
-        if (messageAuthor?.pushToken && sender) {
+        if (messageAuthor?.pushToken && sender && !room?.isMuted) {
           const senderName = sender.name ?? sender.email ?? "Співрозмовник";
           const roomTitle = room?.title ?? "чаті";
 

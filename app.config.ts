@@ -1,6 +1,6 @@
+import { ConfigContext, ExpoConfig } from "expo/config";
 import fs from "fs";
 import path from "path";
-import { ConfigContext, ExpoConfig } from "expo/config";
 
 const APP_NAME = "Modern Chat";
 const PACKAGE_NAME = "com.modernchat.app";
@@ -10,9 +10,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const environment =
     (process.env.APP_ENV as "development" | "preview" | "production") ||
     "development";
-
-  console.log("⚙️  Поточне середовище збірки:", environment);
-  console.log("📦 URL бази даних Convex:", process.env.EXPO_PUBLIC_CONVEX_URL);
 
   const isDev = environment === "development";
   const googleServicesExists = fs.existsSync(
@@ -42,6 +39,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
     android: {
       package: isDev ? `${PACKAGE_NAME}.dev` : PACKAGE_NAME,
+      // @ts-ignore: largeHeap is not strictly typed in ExpoConfig
+      largeHeap: true,
       ...(googleServicesExists ? { googleServicesFile: "./google-services.json" } : {}),
       adaptiveIcon: {
         backgroundColor: "#E6F4FE",
@@ -106,10 +105,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     extra: {
       ...config.extra,
       eas: {
-        projectId:
-          config.extra?.eas?.projectId ??
-          process.env.EAS_PROJECT_ID ??
-          "ВАШ_EAS_PROJECT_ID",
+        projectId: "f2df32dc-e845-44fa-8cbf-849ff6dc294a",
       },
     },
 

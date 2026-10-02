@@ -7,13 +7,18 @@ export default defineSchema({
 
   users: defineTable({
     name: v.optional(v.string()),
+    fullname: v.optional(v.string()),
     image: v.optional(v.string()),
     email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
     username: v.optional(v.string()),
     bio: v.optional(v.string()),
     avatarStorageId: v.optional(v.id("_storage")),
     pushToken: v.optional(v.string()),
-  }).index("by_email", ["email"]),
+  }).index("email", ["email"]),
 
   chatRooms: defineTable({
     title: v.string(),
@@ -21,6 +26,7 @@ export default defineSchema({
     creatorId: v.id("users"),
     lastMessage: v.optional(v.string()),
     lastMessageAt: v.optional(v.number()),
+    isMuted: v.optional(v.boolean()),
   }).index("by_creator", ["creatorId"]),
 
   messages: defineTable({

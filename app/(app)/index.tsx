@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -29,7 +30,7 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  const handleDeleteRoom = (roomId: Id<"chatRooms">) => {
+  const handleDeleteRoom = async (roomId: Id<"chatRooms">) => {
     const room = rooms?.find((r) => r._id === roomId);
     if (!room) return;
 
@@ -44,24 +45,11 @@ export default function HomeScreen() {
       return;
     }
 
-    Alert.alert(
-      "Видалити кімнату?",
-      `Ви впевнені, що хочете видалити кімнату «${room.title}» та всі її повідомлення? Цю дію неможливо скасувати.`,
-      [
-        { text: "Скасувати", style: "cancel" },
-        {
-          text: "Видалити",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteRoom({ roomId });
-            } catch (error: any) {
-              Alert.alert("Помилка", error?.message || "Не вдалося видалити кімнату");
-            }
-          },
-        },
-      ]
-    );
+    try {
+      await deleteRoom({ roomId });
+    } catch (error: any) {
+      Alert.alert("Помилка", error?.message || "Не вдалося видалити кімнату");
+    }
   };
 
   return (
@@ -75,10 +63,18 @@ export default function HomeScreen() {
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.push("/profile")}
-              className="mr-3 w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center"
+              className="mr-3 w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 items-center justify-center overflow-hidden"
               activeOpacity={0.8}
             >
-              <Ionicons name="person" size={18} color="#60A5FA" />
+              {currentUser?.image ? (
+                <Image
+                  source={{ uri: currentUser.image }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="person" size={18} color="#60A5FA" />
+              )}
             </TouchableOpacity>
           ),
           headerRight: () => (

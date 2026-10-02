@@ -3,10 +3,13 @@ import "../global.css";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import * as SecureStore from "expo-secure-store";
+import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import InitialLayout from "../components/InitialLayout";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const convexUrl =
   process.env.EXPO_PUBLIC_CONVEX_URL ||

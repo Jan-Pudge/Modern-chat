@@ -6,6 +6,8 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +17,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Vibration,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -87,6 +90,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
 
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
     } catch (error) {
@@ -97,6 +102,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const cancelRecording = async () => {
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await audioRecorder.stop();
     } catch (error) {
       console.error("Помилка скасування запису:", error);
@@ -105,6 +112,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const stopAndSendRecording = async () => {
     try {
+      Vibration.vibrate(50);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const durationSeconds = Math.round(
         (recorderState.durationMillis || 0) / 1000
       );
@@ -121,16 +130,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
       const uploadUrl = await generateUploadUrl();
 
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      const uploadResult = await fetch(uploadUrl, {
-        method: "POST",
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, uri, {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: { "Content-Type": "audio/m4a" },
-        body: blob,
       });
 
-      const { storageId } = await uploadResult.json();
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        console.error("Помилка завантаження аудіо:", uploadResult.body);
+        throw new Error("Не вдалося завантажити аудіо");
+      }
+
+      const { storageId } = JSON.parse(uploadResult.body);
 
       await sendAudioMessage({
         chatRoomId,
@@ -155,16 +166,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       setIsSending(true);
       const uploadUrl = await generateUploadUrl();
 
-      const response = await fetch(videoUri);
-      const blob = await response.blob();
-
-      const result = await fetch(uploadUrl, {
-        method: "POST",
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, videoUri, {
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
         headers: { "Content-Type": "video/mp4" },
-        body: blob,
       });
 
-      const { storageId } = await result.json();
+      if (uploadResult.status < 200 || uploadResult.status >= 300) {
+        console.error("Помилка завантаження відео:", uploadResult.body);
+        throw new Error("Не вдалося завантажити відео");
+      }
+
+      const { storageId } = JSON.parse(uploadResult.body);
 
       await sendVideoNote({
         chatRoomId,

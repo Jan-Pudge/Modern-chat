@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
+import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -21,6 +23,17 @@ export default function RoomSettingsScreen() {
   });
   const currentUser = useQuery(api.users.currentUser);
   const deleteRoom = useMutation(api.rooms.deleteRoom);
+  const toggleMuteRoom = useMutation(api.rooms.toggleMuteRoom);
+
+  const handleToggleMute = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await toggleMuteRoom({ roomId: id as Id<"chatRooms"> });
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Помилка", "Не вдалося змінити налаштування сповіщень.");
+    }
+  };
 
   const isCreator = room && currentUser && room.creatorId === currentUser._id;
 
@@ -72,6 +85,30 @@ export default function RoomSettingsScreen() {
             <Text className="text-neutral-300 text-sm">{room.description}</Text>
           </>
         ) : null}
+      </View>
+
+      <View className="bg-secondary border border-surfaceLight rounded-2xl p-4 mb-6 flex-row items-center justify-between">
+        <View className="flex-row items-center flex-1 mr-3">
+          <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${room.isMuted ? "bg-red-500/20 border border-red-500/30" : "bg-blue-600/20 border border-blue-500/30"}`}>
+            <Ionicons
+              name={room.isMuted ? "notifications-off" : "notifications"}
+              size={20}
+              color={room.isMuted ? "#EF4444" : "#3B82F6"}
+            />
+          </View>
+          <View className="flex-1">
+            <Text className="text-white text-base font-semibold">Сповіщення</Text>
+            <Text className="text-neutral-400 text-xs mt-0.5">
+              {room.isMuted ? "Вимкнено для цього чату" : "Увімкнено для цього чату"}
+            </Text>
+          </View>
+        </View>
+        <Switch
+          value={!room.isMuted}
+          onValueChange={handleToggleMute}
+          trackColor={{ false: "#3F3F46", true: "#2563EB" }}
+          thumbColor="#FFFFFF"
+        />
       </View>
 
       {isCreator && (

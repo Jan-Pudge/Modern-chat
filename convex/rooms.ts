@@ -83,3 +83,24 @@ export const deleteRoom = mutation({
     return { success: true };
   },
 });
+
+export const toggleMuteRoom = mutation({
+  args: {
+    roomId: v.id("chatRooms"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized: Потрібна авторизація");
+    }
+
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+      throw new Error("Кімнату не знайдено");
+    }
+
+    const newMuted = !room.isMuted;
+    await ctx.db.patch(args.roomId, { isMuted: newMuted });
+    return newMuted;
+  },
+});

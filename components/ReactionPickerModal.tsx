@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import React from "react";
-import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, Text, TouchableOpacity, Vibration, View } from "react-native";
 import { COLORS } from "../constants/theme";
 
 const POPULAR_EMOJIS = ["👍", "❤️", "🔥", "😂", "😮", "😢"];
@@ -50,12 +51,13 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
           onPress={(e) => e.stopPropagation()}
           className="bg-zinc-900 border border-zinc-800 rounded-3xl p-3 shadow-2xl w-full max-w-[320px]"
         >
-          {/* Рядок вибору емодзі */}
           <View className="flex-row items-center justify-between px-1">
             {POPULAR_EMOJIS.map((emoji) => (
               <TouchableOpacity
                 key={emoji}
                 onPress={() => {
+                  Vibration.vibrate(50);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   onSelectEmoji(emoji);
                   onClose();
                 }}
@@ -67,10 +69,8 @@ export const ReactionPickerModal: React.FC<ReactionPickerModalProps> = ({
             ))}
           </View>
 
-          {/* Розділювач */}
           <View className="h-[1px] bg-zinc-800 my-2.5 w-full" />
 
-          {/* Меню дій над повідомленням */}
           <View className="flex-col gap-1">
             <TouchableOpacity
               onPress={() => handleAction(onReply)}

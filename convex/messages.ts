@@ -6,9 +6,7 @@ import { Id } from "./_generated/dataModel";
 import { mutation, query, MutationCtx } from "./_generated/server";
 
 /**
- * Відправляє push-сповіщення через фоновий планувальник Convex:
- * 1. Якщо це відповідь (Reply) — автору оригінального повідомлення.
- * 2. Усім іншим учасникам кімнати (творцю кімнати та тим, хто писав у цей чат).
+ * Schedules push notifications for chat participants.
  */
 async function scheduleMessagePushNotifications(
   ctx: MutationCtx,
@@ -29,11 +27,14 @@ async function scheduleMessagePushNotifications(
   }
 ) {
   const room = await ctx.db.get(chatRoomId);
+  if (!room || room.isMuted) {
+    return;
+  }
   const roomTitle = room?.title ?? "Чат";
 
   let replyAuthorId: Id<"users"> | null = null;
 
-  // СЦЕНАРІЙ А: Якщо це відповідь на чиєсь повідомлення (Reply)
+  // Handle reply notification
   if (replyToId) {
     const originalMessage = await ctx.db.get(replyToId);
     if (originalMessage && originalMessage.senderId !== senderId) {
@@ -59,7 +60,6 @@ async function scheduleMessagePushNotifications(
     }
   }
 
-  // СЦЕНАРІЙ Б: Відправка решті учасників кімнати
   const recentMessages = await ctx.db
     .query("messages")
     .withIndex("by_chat_room", (q) => q.eq("chatRoomId", chatRoomId))
@@ -67,19 +67,16 @@ async function scheduleMessagePushNotifications(
 
   const recipientIds = new Set<Id<"users">>();
 
-  // Додаємо творця кімнати, якщо це не автор повідомлення та не автор реплаю
   if (room?.creatorId && room.creatorId !== senderId && room.creatorId !== replyAuthorId) {
     recipientIds.add(room.creatorId);
   }
 
-  // Додаємо всіх, хто писав у цю кімнату раніше
   for (const msg of recentMessages) {
     if (msg.senderId !== senderId && msg.senderId !== replyAuthorId) {
       recipientIds.add(msg.senderId);
     }
   }
 
-  // Відправляємо пуші всім знайденим учасникам
   for (const recipientId of recipientIds) {
     const recipient = await ctx.db.get(recipientId);
     if (recipient?.pushToken) {
